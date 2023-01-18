@@ -2,6 +2,7 @@
 
 # This script defines the shared functions
 
+
 # Log
 log()
 {
@@ -25,11 +26,11 @@ waitProcess()
     waitProcess_pids=$@
 
     # Wait processes
-    if ! wait $waitProcess_pids 2> /dev/null
+    if ! wait "$waitProcess_pids" 2> /dev/null
     then
         # If a pid is not a child process
         # Wait processes with a sleep loop
-        while kill -0 $waitProcess_pids 2> /dev/null
+        while kill -0 "$waitProcess_pids" 2> /dev/null
         do
             sleep 1
             sleepExitCode=$?
@@ -48,5 +49,5 @@ killProcess()
     killProcess_pids=$@
 
     log "Send SIGTERM to process $killProcess_pids"
-    kill -SIGTERM $killProcess_pids 2> /dev/null
+    kill -SIGTERM "$killProcess_pids" 2> /dev/null
 }

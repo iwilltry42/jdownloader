@@ -12,7 +12,7 @@ handleSignal()
     if [ -n "$pid" ] # If java process found
     then
         stop=true
-        killProcess $pid
+        killProcess "$pid"
     else
         log "________________________________________ CONTAINER KILLED __________________________________________"
         exit $((128 + $handleSignal_signalCode))
@@ -41,7 +41,7 @@ log "Java version is $JAVA_VERSION"
 
 # Check environment variables
 
-log "JAVA_OPTIONS=`$JAVA_OPTIONS`"
+log "JAVA_OPTIONS=$($JAVA_OPTIONS)"
 
 if [ -z "$JD_EMAIL" ]
 then
@@ -59,7 +59,7 @@ then
 fi
 
 JDownloaderJarFile="JDownloader.jar"
-JDownloaderJarUrl="http://installer.jdownloader.org/$JDownloaderJarFile"
+JDownloaderJarUrl="https://installer.jdownloader.org/$JDownloaderJarFile"
 JDownloaderPidFile="JDownloader.pid"
 
 # Check JDownloader application integrity
@@ -107,7 +107,8 @@ cp "./$autoUpdateEventScripterScript" "./cfg/$autoUpdateEventScripterScript"
 log "Start JDownloader"
 
 # Start JDownloader in a background process
-java $JAVA_OPTIONS -Djava.awt.headless=true -jar $JDownloaderJarFile &> /dev/null &
+LOGFILE="/var/log/jd.log"
+bash -c "java $JAVA_OPTIONS -Djava.awt.headless=true -jar $JDownloaderJarFile &> ${LOGFILE}" &
 pid=$!
 lastPid=""
 
@@ -120,10 +121,11 @@ do
 
     if [[ $stop ]]
     then
-        killProcess $pid
+        log "Stop received: Killing JDownloader"
+        killProcess "$pid"
     fi
 
-    waitProcess $pid
+    waitProcess "$pid"
     exitCode=$?
 
     lastPid="$pid"
@@ -132,8 +134,9 @@ do
     pid=$(pgrep -L -F $JDownloaderPidFile 2> /dev/null || pgrep -o java)
 done
 
-log "JDownloader stopped"
+log "JDownloader stopped (exit code $exitCode)"
+cat ${LOGFILE}
 
 log "________________________________________ CONTAINER STOPPED _________________________________________"
 
-exit $exitCode
+exit "$exitCode"
